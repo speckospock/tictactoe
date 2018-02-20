@@ -35,6 +35,42 @@ const createMoveHandler = () => {
 
 const handleMove = createMoveHandler();
 
+const sum = (a, b) => a + b;
+
+const checkRow = row => {
+  let total = row.reduce(sum, 0);
+  if (total === -3) return -1; //player 2 wins
+  if (total === 3) return 1; //player 1 wins
+  return 0; //nobody wins yet
+}
+
+const checkRows = board => board.map(row => checkRow(row)).reduce(sum, 0);
+
+const checkCols = board => {
+  let cols = board.reduce((newBoard, row, r) => {
+    row.forEach((col, c) => {
+      newBoard[c][r] = col;
+    })
+    return newBoard;
+  }, ([[],[],[]]));
+  return checkRows(cols);
+};
+
+const checkDiag = board => {
+  let majDiag = [board[0][0], board[1][1], board[2][2]];
+  let minDiag = [board[0][2], board[1][1], board[2][0]];
+  return checkRows([majDiag, minDiag]);
+}
+
+const checkWinner = board => {
+  let rCheck = checkRows(board);
+  if (rCheck) return rCheck;
+  let cCheck = checkCols(board);
+  if (cCheck) return cCheck;
+  let dCheck = checkDiag(board);
+  return dCheck;
+}
+
 const play = (board = initialBoard()) => {
   createBoard(board);
   return board;
@@ -45,7 +81,12 @@ const ticTacToe = () => {
   process.stdin.on('data', (data) => {
     let move = data.toString().trim();
     gameBoard = handleMove(move, gameBoard);
+    let winner = checkWinner(gameBoard);
     createBoard(gameBoard);
+    if (winner) {
+      console.log(`Winner is: ${(winner > 0) ? 'Player 1' : 'Player 2'}`);
+      process.exit();
+    }
   });
   let board = play(gameBoard);
 };
